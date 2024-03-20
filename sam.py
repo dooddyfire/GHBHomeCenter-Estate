@@ -13,9 +13,12 @@ import time
 import re 
 import pandas as pd 
 
+
+
+filename = "TestBam1166.xlsx"
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-start = 1 
-end = 1
+start = 11 
+end = 66
 
 area_lis = []
 map_link = []
@@ -34,6 +37,8 @@ source_lis = []
 web_lis = []
 image_lis = []
 address_lis = []
+name_lis = []
+gmap_lis = []
 
 for i in range(start,end+1):
     url = "https://www.ghbhomecenter.com/property-for-sale?&pId=395&pg={}".format(i)
@@ -43,7 +48,8 @@ for i in range(start,end+1):
 
 
     lis = [x['rel'] for x in soup.find_all('div',{'class':'link-property-detail'})]
-    
+
+    print("Page : ",i)
     area_lisx = [f.find('div',{'class':'text-area'}).text.strip() for f in soup.find_all('div',{'class':'link-property-detail'})]
     for a in area_lisx: 
 
@@ -55,50 +61,88 @@ for i in range(start,end+1):
 
 
 
-    for i in lis: 
+    for u in lis: 
 
-        driver.get(i)
+        url_lis.append(u)
+        print(u)
+
+        driver.get(u)
         soupx = BeautifulSoup(driver.page_source,'html.parser')
 
         sect = soupx.find('section',{'class':'page-product-detail'})
 
-        img = soupx.find('div',{'class':'img-fill'}).find('img')['src']
-        image_lis.append(img)
-        print(img)
+        try:
+            img = soupx.find('div',{'class':'img-fill'}).find('img')['src']
+            image_lis.append(img)
+            print(img)
+        except: 
+            img = " "
+            image_lis.append(img)
+            print(img)
+
+        try:
+            name = sect.find('h1').text 
+            name_lis.append(name)
+            print(name)
+        except: 
+            name = " "
+            name_lis.append(name)
+            print(name)
 
 
-        name = sect.find('h1').text 
-        print(name)
-
-        url_lis.append(i)
-        print(i)
-
-        price = sect.find('h3',{'class':'text-price'}).text.replace("ราคาทรัพย์","").strip()
+        try:
+            price = sect.find('h3',{'class':'text-price'}).text.replace("ราคาทรัพย์","").strip()
+            
+        except: 
+            price = " "
         print(price)
         price_lis.append(price)
 
         lisx = [ g for g in sect.find_all('li',{'class':'list-group-item'})]
         print(lisx)
 
-        typex = lisx[0].text.strip()
+        try:
+            typex = lisx[0].text.strip()
+            
+        except: 
+            typex = " "
+        
         print(typex)
         type_lis.append(typex)
 
-        province = lisx[5].text.replace("จังหวัด","").strip()
-        print(province)
+        try:
+            province = lisx[5].text.replace("จังหวัด","").strip()
+        
+        except:
+            province = " "
+
         prov_lis.append(province)
+        print(province)
 
-        district = lisx[-2].text.strip()
-        print(district)
+        try:
+            district = lisx[-2].text.strip()
+        except: 
+            district = " "
+
+        
         district_lis.append(district)
+        print(district)
 
-        subdis = lisx[4].text.strip()
-        print(subdis)
+        try:
+            subdis = lisx[4].text.strip()
+        except:
+            subdis = " "
         subdistrict_lis.append(subdis)
+        print(subdis)
 
-        address = subdis +" " +district+" "+province
-        address_lis.append(address)
+        try:
+            address = subdis +" " +district+" "+province
+        except: 
+            address = " "
+
+        
         print(address)
+        address_lis.append(address)
 
         google_maps_regex = re.compile(r'https?://(?:www\.)?google\.com/maps\?.*')
 
@@ -112,6 +156,9 @@ for i in range(start,end+1):
         else: 
             # Regular expression to extract latitude and longitude values
             google_maps_link = google_maps_links[0]
+
+            gmap_lis.append(google_maps_link)
+
             lat_long_regex = re.compile(r'daddr=(-?\d+\.\d+),(-?\d+\.\d+)')
 
             # Extract latitude and longitude values from the Google Maps link
@@ -131,10 +178,13 @@ for i in range(start,end+1):
         lat_lis.append(latitude)
         long_lis.append(longitude)     
 
+        print("---------------------")
+
 print(len(image_lis))
 print(len(url_lis))
 df = pd.DataFrame()
 
+df['name'] = name_lis 
 df['link'] = url_lis 
 df['type'] = type_lis 
 df['area'] = area_lis 
@@ -146,5 +196,8 @@ df['province'] = prov_lis
 df['district'] = district_lis 
 df['subdistrict'] = subdistrict_lis 
 df['image'] = image_lis
+#df['Google Map'] = gmap_lis
 
-df.to_excel("TestBam2.xlsx")
+df.to_excel(filename)
+
+print("finish")
