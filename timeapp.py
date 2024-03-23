@@ -14,18 +14,33 @@ import re
 import pandas as pd 
 import schedule
 from datetime import datetime
+from selenium.webdriver.chrome.options import Options
 
 
-def scrape_data(start_page,end_page):
+def scrape_data(start_page):
     
     # ชื่อไฟล์
     filename = f'scrape_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+    # option headless
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+
+    linkx = "https://www.ghbhomecenter.com/property-for-sale?&pId=395&pg=1"
+    driver.get(linkx)
+
+    lisqp = [ h.text for h in driver.find_elements(By.CSS_SELECTOR,'a.page-link')]
+    print(lisqp)
 
     # หน้าเริ่มต้น
     start = start_page
-    # หน้าสุดท้าย
-    end = end_page
+    # หน้าสุดท้าย เซตหน้าสุดท้าย
+    end = int(lisqp[-2])
+    print("End Page : {}".format(end))
 
 
     area_lis = []
@@ -221,10 +236,10 @@ filenamex = f"scrape_{datetime_str}.xlsx"
 
 #scrape_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx
 
-schedule.every(10).seconds.do(scrape_data,start_page=1,end_page=1)
-#schedule.every(1).minutes.do(scrape_data,start_page=1,end_page=1)
-#schedule.every().hour.do(scrape_data,start_page=1,end_page=1)
-#schedule.every().day.at("10:30").do(scrape_data,start_page=1,end_page=1)
+schedule.every(10).seconds.do(scrape_data,start_page=1)
+#schedule.every(1).minutes.do(scrape_data,start_page=1)
+#schedule.every().hour.do(scrape_data,start_page=1)
+#schedule.every().day.at("10:30").do(scrape_data,start_page=1)
 
 
 while True:
